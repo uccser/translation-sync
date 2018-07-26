@@ -1,2 +1,3 @@
-# translation-sync
-A tool to keep our projects content in sync with our translation systems.
+# UCCSER Translation Sync
+
+A tool to keep the content of UCCSER projects in sync with our translation systems.

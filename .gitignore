@@ -1,3 +1,6 @@
+# Ignore directory of cloned repositories
+repositories/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
