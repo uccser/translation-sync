@@ -1,43 +1,19 @@
 import os
 import subprocess
+import requests
 from shutil import rmtree
+from modules.utils import run, check_envs
+from modules.crowdin_api import (
+    upload_file_to_crowdin,
+    create_crowdin_directory,
+)
+from repositories import REPOSITORIES
 
 DEFAULT_WORKING_DIRECTORY = os.getcwd()
 REPOSTIORY_DIRECTORY = "repositories"
 GITHUB_BOT_EMAIL = "33709036+uccser-bot@users.noreply.github.com"
 GITHUB_BOT_NAME = "UCCSER Bot"
 BRANCH_PREFIX = "translation-"
-REPOSITORIES = [
-    {
-        "title": "CS Unplugged",
-        "name": "cs-unplugged",
-        "git-address": "git@github.com:uccser/cs-unplugged.git",
-        "crowdin-config-file": "crowdin_content.yaml",
-        "django-message-file": "csunplugged/locale/en/LC_MESSAGES/django.po",
-        "commands": {
-            "start": [
-                ["./csu", "start"],
-                ["./csu", "update"],
-            ],
-            "end": ["./csu", "end"],
-            "makemessages": ["./csu", "dev", "makemessages"],
-        },
-        "branches": {
-            # Branch for upload of source content to Crowdin
-            "translation-source": "develop",
-            # Branch that new translations will be merged into
-            "translation-target": "develop",
-            # Branch that updated English message PO files will be merged into
-            "update-messages-target": "develop",
-            # Branch that new metadata for in context localisation will be merged into
-            "in-context-target": "develop",
-            # Code for in-context localisation pseudo language on Crowdin
-            "in-context-pseudo-language-crowdin": "en-UD",
-            # Code for in-context localisation pseudo language on website
-            "in-context-pseudo-language-website": "xx_LR",
-        },
-    },
-]
 REQUIRED_ENVIRONMENT_VARIABLES = [
     ["GITHUB_TOKEN", "OAuth token to use for GitHub API requests"],
 ]
@@ -46,34 +22,6 @@ MESSSAGE_FILE_TRIVAL_LINES = (
     '"PO-Revision-Date:',
     "#: ",
 )
-
-
-def run(commands, display=True, check=True):
-    """Run a list of shell commands.
-
-    Args:
-        commands (list of strings OR list of lists of strings).
-    """
-    if not all(isinstance(command, list) for command in commands):
-        commands = [commands]
-    for command in commands:
-        result = subprocess.run(command, check=check, stdout=subprocess.PIPE)
-        result_message = result.stdout.decode("utf-8")
-        if display and result_message:
-            print(result_message)
-    return result
-
-
-def check_envs():
-    print("Checking environment variables...")
-    for (key, description) in REQUIRED_ENVIRONMENT_VARIABLES:
-        try:
-            os.environ[key]
-        except KeyError:
-            message = "ERROR! Enviornment variable '{}' not found!\n  - Key description: {}"
-            raise LookupError(message.format(key, description))
-        print("  - '{}' set correctly.".format(key))
-    print()
 
 
 def setup_git_account():
@@ -144,18 +92,45 @@ def reset_message_file_comments(message_file_path):
         run(["git", "reset", "HEAD", message_file_path])
 
 
+def push_source_files(repository_data):
+    existing_directories = set()
+    for source_directory in repository_data["source-directories"]:
+        source_directory_segments = source_directory.rstrip("/").split("/")
+        i = 1
+        while i <= len(source_directory_segments):
+            directory_path = os.path.join(*source_directory_segments[:i])
+            if directory_path not in existing_directories:
+                create_crowdin_directory(directory_path, repository_data)
+                existing_directories.add(directory_path)
+            i += 1
+
+        for current_directory, directories, files in os.walk(source_directory):
+            for directory in directories:
+                directory_path = os.path.join(current_directory, directory)
+                if directory_path not in existing_directories:
+                    create_crowdin_directory(directory_path, repository_data)
+                    existing_directories.add(directory_path)
+
+            for filename in sorted(files):
+                file_path = os.path.join(current_directory, filename)
+                upload_file_to_crowdin(file_path, repository_data)
+
+
 if __name__ == "__main__":
-    check_envs()
+    check_envs(REQUIRED_ENVIRONMENT_VARIABLES)
 
     # Create directory for storing repostiories
-    if not os.path.exists(REPOSTIORY_DIRECTORY):
-        os.makedirs(REPOSTIORY_DIRECTORY)
+    # if not os.path.exists(REPOSTIORY_DIRECTORY):
+    #     os.makedirs(REPOSTIORY_DIRECTORY)
     os.chdir(REPOSTIORY_DIRECTORY)
 
     for repository_data in REPOSITORIES:
-        clone_repository(repository_data)
+        # clone_repository(repository_data)
         os.chdir(repository_data["name"])
-        setup_git_account()
-        start_docker_compose_system(repository_data)
-        update_source_message_file(repository_data)
-        end_docker_compose_system(repository_data)
+        # setup_git_account()
+        # start_docker_compose_system(repository_data)
+        # # Regenerate source langage (English) message files
+        # update_source_message_file(repository_data)
+        # Push source language (English) files) to Crowdin
+        push_source_files(repository_data)
+        # end_docker_compose_system(repository_data)
