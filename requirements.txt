@@ -1,1 +1,13 @@
+# General
+PyGithub==1.40
+Jinja2==2.10
+PyYAML==4.2b4
+
+# Translations
 requests==2.19.1
+
+# Link Checker
+linkie==1.2.0
+
+# Testing
+flake8==3.5.0

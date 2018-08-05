@@ -1,5 +1,5 @@
-# Ignore directory of cloned repositories
-repositories/
+# Ignore directory of cloned projects
+projects/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

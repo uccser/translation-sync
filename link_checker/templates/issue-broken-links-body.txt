@@ -1,0 +1,4 @@
+[Linkie](https://github.com/uccser/linkie) was run over this repository, and checked {{ number_files }} file{% if number_files > 1 %}s{% endif %} and detected {{ broken_links|length }} broken link{% if broken_links|length > 1 %}s{% endif %}.
+{% for broken_link, broken_link_data in broken_links.items()|sort %}
+{{ loop.index }}) {{ broken_link }} (error: {{ broken_link_data.status }})
+{%- endfor %}
