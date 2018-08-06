@@ -3,6 +3,7 @@
 from utils import (
     run_shell,
     checkout_branch,
+    git_reset,
 )
 from .constants import BRANCH_PREFIX
 from .utils import reset_message_file_comments
@@ -26,3 +27,4 @@ def update_source_message_file(project):
         run_shell(["git", "push", "origin", pr_branch])
     else:
         print("No changes to source message file to push.")
+    git_reset()

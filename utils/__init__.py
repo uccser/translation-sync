@@ -57,9 +57,15 @@ def get_crowdin_api_key(project_name):
     allowed = set(ascii_uppercase)
     key = "".join(l for l in project_name.upper() if l in allowed)
     key += "_CROWDIN_API_KEY"
+    print("Checking for enviornment variable '{}'".format(key))
     try:
         value = os.environ[key]
+        print("Found enviornment variable '{}'".format(key))
     except KeyError:
         message = "ERROR! Enviornment variable '{}' not found!"
         raise LookupError(message.format(key))
     return value
+
+def git_reset():
+    run_shell(["git", "reset", "--hard"])
+    run_shell(["git", "clean", "-fdx"])

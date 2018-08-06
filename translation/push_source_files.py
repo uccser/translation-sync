@@ -6,6 +6,7 @@ from .crowdin_api import (
     create_crowdin_directory,
 )
 from .constants import SOURCE_LANGUAGE
+from utils import git_reset
 
 
 def push_source_files(project):
@@ -35,3 +36,4 @@ def push_source_files(project):
                 if filename.endswith(valid_file_types):
                     file_path = os.path.join(current_directory, filename)
                     upload_file_to_crowdin(file_path, project)
+    git_reset()

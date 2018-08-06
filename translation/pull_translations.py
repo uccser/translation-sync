@@ -2,7 +2,7 @@ import os
 import glob
 from zipfile import ZipFile
 from shutil import copy
-from utils import checkout_branch, run_shell
+from utils import checkout_branch, run_shell, git_reset
 from .crowdin_api import api_call, download_translations
 from .constants import BRANCH_PREFIX, SOURCE_LANGUAGE
 from .utils import reset_message_file_comments
@@ -112,5 +112,4 @@ def pull_translations(project):
             run_shell(["git", "push", "origin", pr_branch])
         else:
             print("No changes to '{}' translation to push.".format(language))
-        run_shell(["git", "reset", "--hard"])
-        run_shell(["git", "clean", "-fdx"])
+        git_reset()
