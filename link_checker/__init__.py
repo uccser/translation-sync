@@ -46,8 +46,8 @@ def check_links(project):
             existing_issue.create_comment(message)
     # Else if no existing issue and errors, create issue
     elif not existing_issue and result:
-        project.repo.create_issue(
+        issue = project.repo.create_issue(
             title=header_text,
             body=body_text,
-            labels=[project.repo.get_label("bug")],
         )
+        issue.add_to_labels("bug")

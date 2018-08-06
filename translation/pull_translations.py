@@ -2,7 +2,12 @@ import os
 import glob
 from zipfile import ZipFile
 from shutil import copy
-from utils import checkout_branch, run_shell, git_reset
+from utils import (
+    checkout_branch,
+    run_shell,
+    git_reset,
+    render_text,
+)
 from .crowdin_api import api_call, download_translations
 from .constants import BRANCH_PREFIX, SOURCE_LANGUAGE
 from .utils import reset_message_file_comments
@@ -112,4 +117,21 @@ def pull_translations(project):
             run_shell(["git", "push", "origin", pr_branch])
         else:
             print("No changes to '{}' translation to push.".format(language))
+        existing_pulls = project.repo.get_pulls(state="open", head="uccser:" + pr_branch, base=target_branch)
+        if len(list(existing_pulls)) > 0:
+            print("Existing pull request detected.")
+        else:
+            context = {
+                "language": language,
+            }
+            header_text = render_text("translation/templates/pr-pull-translations-header.txt", context)
+            body_text = render_text("translation/templates/pr-pull-translations-body.txt", context)
+            pull = project.repo.create_pull(
+                title=header_text,
+                body=body_text,
+                base=target_branch,
+                head=pr_branch,
+            )
+            pull.add_to_labels("internationalization")
+            print("Pull request created: {} (#{})".format(pull.title, pull.number))
         git_reset()
