@@ -62,15 +62,15 @@ class Project:
 
     def run(self):
         if self.config.get("broken-link-checker"):
-            # check_links(self)
+            check_links(self)
             self.display_elapsed_time()
 
         if self.config.get("translation"):
             self.crowdin_api_key = get_crowdin_api_key(self.name)
-            # update_source_message_file(self)
-            # self.display_elapsed_time()
-            # push_source_files(self)
-            # self.display_elapsed_time()
+            update_source_message_file(self)
+            self.display_elapsed_time()
+            push_source_files(self)
+            self.display_elapsed_time()
             pull_translations(self)
             self.display_elapsed_time()
 
