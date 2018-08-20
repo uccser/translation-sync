@@ -1,6 +1,7 @@
 """Module for interacting with the Crowdin API."""
 
 import requests
+import os.path
 
 API_URL = "https://api.crowdin.com/api/project/{project}/{method}"
 
@@ -31,7 +32,7 @@ def api_call(method, project, files=None, **params):
 def upload_file_to_crowdin(file_path, project):
     export_pattern = file_path.replace("/en/", "/%osx_locale%/")
     files = {
-        "files[{}]".format(file_path): open(file_path, "rb"),
+        "files[{}]".format(file_path): (os.path.basename(file_path), open(file_path, "rb").read()),
         "export_patterns[{}]".format(file_path): (None, export_pattern),
     }
     response = api_call(
