@@ -31,6 +31,9 @@ def api_call(method, project, files=None, **params):
 
 def upload_file_to_crowdin(file_path, project):
     export_pattern = file_path.replace("/en/", "/%osx_locale%/")
+    if not export_pattern[0] == "/":
+        export_pattern = "/" + export_pattern
+
     files = {
         "files[{}]".format(file_path): (os.path.basename(file_path), open(file_path, "rb").read()),
         "export_patterns[{}]".format(file_path): (None, export_pattern),

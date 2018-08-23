@@ -11,6 +11,7 @@ from utils import (
 from translation import (
     update_source_message_file,
     push_source_files,
+    build_project,
     pull_translations,
 )
 from link_checker import check_links
@@ -71,6 +72,8 @@ class Project:
             self.display_elapsed_time()
             push_source_files(self)
             self.display_elapsed_time()
+            build_project(self)
+            self.display_elapsed_time()
             pull_translations(self)
             self.display_elapsed_time()
 
@@ -83,6 +86,12 @@ def main():
         "--skip-clone",
         help="Skip cloning repositories",
         action="store_true"
+    )
+    parser.add_argument(
+        "-r",
+        "--repo",
+        help="Run only on the given repository",
+        action="store"
     )
     args = parser.parse_args()
     if args.skip_clone:
@@ -98,7 +107,11 @@ def main():
     github_env = github.Github(os.environ["GITHUB_TOKEN"])
     uccser = github_env.get_user("uccser")
     bot = github_env.get_user("uccser-bot")
-    uccser_repos = uccser.get_repos()
+    if args.repo:
+        uccser_repos = [uccser.get_repo(args.repo)]
+    else:
+        uccser_repos = uccser.get_repos()
+
     for repo in uccser_repos:
         os.chdir(directory_of_projects)
         print("{0}\n{1}\n{2}".format(MAJOR_SEPERATOR, repo.full_name, MINOR_SEPERATOR))

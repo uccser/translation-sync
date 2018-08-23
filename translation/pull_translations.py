@@ -26,6 +26,7 @@ def get_osx_locale_mapping(project):
     mapping = {
         language["crowdin_code"]: language["osx_locale"] for language in languages_json
     }
+    # TODO: Language overrides
     return mapping
 
 
@@ -60,11 +61,11 @@ def get_approved_node_files(node, parent_path=""):
     return approved_files
 
 
-def copy_approved_fles(project, extract_location, approved_files, language):
+def copy_approved_files(project, extract_location, approved_files, language):
     source_path = os.sep + SOURCE_LANGUAGE + os.sep
     destination_path = os.sep + language + os.sep
 
-    for approved_file in approved_files:
+    for approved_file in sorted(list(approved_files)):
         approved_file_destination = approved_file.replace(source_path, destination_path)
         source = os.path.join(
             extract_location,
@@ -94,17 +95,18 @@ def pull_translations(project):
         zipped_translations.extractall(extract_location)
     os.remove(TRANSLATION_ZIP)
 
-    for language in project_languages:
+    for crowdin_language_code in project_languages:
+        language = locale_mapping[crowdin_language_code]
         print("Processing '{}' language...".format(language))
         target_branch = project.config["translation"]["branches"]["translation-target"]
         pr_branch = BRANCH_PREFIX + language
         checkout_branch(target_branch)
         checkout_branch(pr_branch)
         run_shell(["git", "merge", "origin/" + target_branch, "--quiet", "--no-edit"])
-        response = api_call("language-status", project, json=True, language=language)
+        response = api_call("language-status", project, json=True, language=crowdin_language_code)
         approved_files = get_approved_files(response.json())
 
-        copy_approved_fles(project, extract_location, approved_files, language)
+        copy_approved_files(project, extract_location, approved_files, language)
 
         run_shell(["git", "add", "-A"])
         message_files = glob.glob("./**/{}/**/*.po".format(language), recursive=True)
@@ -115,23 +117,23 @@ def pull_translations(project):
             print("Changes to '{}' language to push.".format(language))
             run_shell(["git", "commit", "-m", "Update '{}' language translations".format(language)])
             run_shell(["git", "push", "origin", pr_branch])
-        else:
-            print("No changes to '{}' translation to push.".format(language))
-        existing_pulls = project.repo.get_pulls(state="open", head="uccser:" + pr_branch, base=target_branch)
-        if len(list(existing_pulls)) > 0:
-            print("Existing pull request detected.")
-        else:
-            context = {
-                "language": language,
-            }
-            header_text = render_text("translation/templates/pr-pull-translations-header.txt", context)
-            body_text = render_text("translation/templates/pr-pull-translations-body.txt", context)
-            pull = project.repo.create_pull(
+            existing_pulls = project.repo.get_pulls(state="open", head="uccser:" + pr_branch, base=target_branch)
+            if len(list(existing_pulls)) > 0:
+                print("Existing pull request detected.")
+            else:
+                context = {
+                    "language": language,
+                }
+                header_text = render_text("translation/templates/pr-pull-translations-header.txt", context)
+                body_text = render_text("translation/templates/pr-pull-translations-body.txt", context)
+                pull = project.repo.create_pull(
                 title=header_text,
                 body=body_text,
                 base=target_branch,
                 head=pr_branch,
-            )
-            pull.add_to_labels("internationalization")
-            print("Pull request created: {} (#{})".format(pull.title, pull.number))
+                )
+                pull.add_to_labels("internationalization")
+                print("Pull request created: {} (#{})".format(pull.title, pull.number))
+        else:
+            print("No changes to '{}' translation to push.".format(language))
         git_reset()
