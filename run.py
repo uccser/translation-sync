@@ -41,13 +41,14 @@ def setup_git_account():
 
 class Project:
 
-    def __init__(self, config, repo, bot, secrets, parent_directory):
+    def __init__(self, config, repo, bot, secrets, parent_directory, cli_args):
         self.config = config
         self.repo = repo
         self.name = repo.name
         self.bot = bot
         self.secrets = secrets
         self.parent_directory = parent_directory
+        self.cli_args = cli_args
         self.directory = os.path.join(parent_directory, self.name)
         self.start_time = timer()
 
@@ -57,13 +58,13 @@ class Project:
 
     def clone(self):
         """Clone the repository, deleting any existing installations."""
-        if os.path.isdir(self.directory):
+        if os.path.isdir(self.directory) and not self.cli_args.skip_clone:
             print("Existing repository detected! Deleting existing directory...")
             rmtree(self.repo.name)
         run_shell(["git", "clone", self.repo.ssh_url])
 
     def run(self):
-        if self.config.get("broken-link-checker"):
+        if self.config.get("broken-link-checker") and not self.cli_args.skip_link_checker:
             check_links(self)
             self.display_elapsed_time()
 
@@ -93,6 +94,12 @@ def main():
         "--repo",
         help="Run only on the given repository",
         action="store"
+    )
+    parser.add_argument(
+        "-lc",
+        "--skip-link-checker",
+        help="Skip checking for broken links",
+        action="store_true"
     )
     args = parser.parse_args()
     if args.skip_clone:
@@ -130,9 +137,8 @@ def main():
                 print("Error! YAML file invalid.")
                 # TODO: Log issue on repo
             if config:
-                project = Project(config, repo, bot, secrets, directory_of_projects)
-                if not args.skip_clone:
-                    project.clone()
+                project = Project(config, repo, bot, secrets, directory_of_projects, args)
+                project.clone()
                 os.chdir(project.directory)
                 setup_git_account()
                 project.run()
