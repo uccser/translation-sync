@@ -1,4 +1,5 @@
 import os
+import yaml
 import subprocess
 from jinja2 import Template
 from timeit import default_timer as timer
@@ -21,16 +22,25 @@ def run_shell(commands, display=True, check=True):
     return result
 
 
-def check_envs(envs):
-    print("Checking environment variables...")
-    for (key, description) in envs:
+def read_secrets(required_secrets):
+    print("Reading secrets file...")
+    with open("secrets.yaml", "r") as secrets_file:
+        secrets_yaml = secrets_file.read()
+
+    try:
+        secrets = yaml.load(secrets_yaml)
+    except yaml.YAMLError:
+        print("Error! Secrets YAML file invalid.")
+    print("Checking secrets...")
+    for (key, description) in required_secrets:
         try:
-            os.environ[key]
+            secrets[key]
         except KeyError:
-            message = "ERROR! Enviornment variable '{}' not found!\n  - Key description: {}"
+            message = "ERROR! Secret '{}' not found!\n  - Key description: {}"
             raise LookupError(message.format(key, description))
         print("  - '{}' set correctly.".format(key))
     print()
+    return secrets
 
 
 def checkout_branch(branch):
@@ -53,16 +63,16 @@ def display_elapsed_time(start_time):
     print("Process took {:.0f}m {:.1f}s.\n".format(mins, secs))
 
 
-def get_crowdin_api_key(project_name):
+def get_crowdin_api_key(project_name, secrets):
     allowed = set(ascii_uppercase)
     key = "".join(l for l in project_name.upper() if l in allowed)
     key += "_CROWDIN_API_KEY"
-    print("Checking for enviornment variable '{}'".format(key))
+    print("Checking for secret '{}'".format(key))
     try:
-        value = os.environ[key]
-        print("Found enviornment variable '{}'".format(key))
+        value = secrets[key]
+        print("Found secret '{}'".format(key))
     except KeyError:
-        message = "ERROR! Enviornment variable '{}' not found!"
+        message = "ERROR! Secret '{}' not found!"
         raise LookupError(message.format(key))
     return value
 

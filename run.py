@@ -4,7 +4,7 @@ import yaml
 from shutil import rmtree
 from utils import (
     run_shell,
-    check_envs,
+    read_secrets,
     display_elapsed_time,
     get_crowdin_api_key,
 )
@@ -24,7 +24,7 @@ DEFAULT_WORKING_DIRECTORY = os.getcwd()
 PROJECT_DIRECTORY = "projects"
 GITHUB_BOT_EMAIL = "33709036+uccser-bot@users.noreply.github.com"
 GITHUB_BOT_NAME = "UCCSER Bot"
-REQUIRED_ENVIRONMENT_VARIABLES = [
+REQUIRED_SECRETS = [
     ["GITHUB_TOKEN", "OAuth token to use for GitHub API requests"],
 ]
 PROJECT_CONFIG_FILE = ".arnold.yaml"
@@ -41,11 +41,12 @@ def setup_git_account():
 
 class Project:
 
-    def __init__(self, config, repo, bot, parent_directory):
+    def __init__(self, config, repo, bot, secrets, parent_directory):
         self.config = config
         self.repo = repo
         self.name = repo.name
         self.bot = bot
+        self.secrets = secrets
         self.parent_directory = parent_directory
         self.directory = os.path.join(parent_directory, self.name)
         self.start_time = timer()
@@ -67,7 +68,7 @@ class Project:
             self.display_elapsed_time()
 
         if self.config.get("translation"):
-            self.crowdin_api_key = get_crowdin_api_key(self.name)
+            self.crowdin_api_key = get_crowdin_api_key(self.name, self.secrets)
             update_source_message_file(self)
             self.display_elapsed_time()
             push_source_files(self)
@@ -97,14 +98,14 @@ def main():
     if args.skip_clone:
         print("Skip cloning repositories turned on.\n")
 
-    check_envs(REQUIRED_ENVIRONMENT_VARIABLES)
+    secrets = read_secrets(REQUIRED_SECRETS)
 
     if not os.path.exists(PROJECT_DIRECTORY):
         os.makedirs(PROJECT_DIRECTORY)
     os.chdir(PROJECT_DIRECTORY)
     directory_of_projects = os.path.abspath(os.getcwd())
 
-    github_env = github.Github(os.environ["GITHUB_TOKEN"])
+    github_env = github.Github(secrets["GITHUB_TOKEN"])
     uccser = github_env.get_user("uccser")
     bot = github_env.get_user("uccser-bot")
     if args.repo:
