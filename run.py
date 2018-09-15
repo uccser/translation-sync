@@ -129,9 +129,8 @@ def main():
             except yaml.YAMLError:
                 print("Error! YAML file invalid.")
                 # TODO: Log issue on repo
-                # TODO: Notify organisation by email or on Slack
             if config:
-                project = Project(config, repo, bot, directory_of_projects)
+                project = Project(config, repo, bot, secrets, directory_of_projects)
                 if not args.skip_clone:
                     project.clone()
                 os.chdir(project.directory)
