@@ -34,9 +34,9 @@ SEPERATOR_WIDTH = 60
 MAJOR_SEPERATOR = "=" * SEPERATOR_WIDTH
 MINOR_SEPERATOR = "-" * SEPERATOR_WIDTH
 
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.INFO)
 client = google.cloud.logging.Client()
-client.setup_logging(log_level=logging.DEBUG)
+client.setup_logging(log_level=logging.INFO)
 
 
 def setup_git_account():
