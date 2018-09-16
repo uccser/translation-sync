@@ -40,7 +40,6 @@ def read_secrets(required_secrets):
             message = "ERROR! Secret '{}' not found!\n  - Key description: {}"
             raise LookupError(message.format(key, description))
         logging.debug("  - '{}' set correctly.".format(key))
-    logging.debug()
     return secrets
 
 

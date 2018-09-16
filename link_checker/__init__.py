@@ -8,7 +8,6 @@ def check_links(project):
     linkie_config = project.config.get("broken-link-checker", dict())
     checker = Linkie(config=linkie_config)
     result = checker.run()
-    logging.debug()
 
     broken_links = dict()
     for url, url_data in checker.urls.items():
