@@ -1,4 +1,5 @@
 import os
+import logging
 import base64
 import yaml
 from shutil import rmtree
@@ -17,8 +18,8 @@ from translation import (
 from link_checker import check_links
 import argparse
 import github
+import google.cloud.logging
 from timeit import default_timer as timer
-
 
 DEFAULT_WORKING_DIRECTORY = os.getcwd()
 PROJECT_DIRECTORY = "projects"
@@ -31,6 +32,10 @@ PROJECT_CONFIG_FILE = ".arnold.yaml"
 SEPERATOR_WIDTH = 60
 MAJOR_SEPERATOR = "=" * SEPERATOR_WIDTH
 MINOR_SEPERATOR = "-" * SEPERATOR_WIDTH
+
+logging.basicConfig(level=logging.DEBUG)
+client = google.cloud.logging.Client()
+client.setup_logging()
 
 
 def setup_git_account():
@@ -59,7 +64,7 @@ class Project:
     def clone(self):
         """Clone the repository, deleting any existing installations."""
         if os.path.isdir(self.directory) and not self.cli_args.skip_clone:
-            print("Existing repository detected! Deleting existing directory...")
+            logging.debug("Existing repository detected! Deleting existing directory...")
             rmtree(self.repo.name)
         run_shell(["git", "clone", self.repo.ssh_url])
 
@@ -103,7 +108,7 @@ def main():
     )
     args = parser.parse_args()
     if args.skip_clone:
-        print("Skip cloning repositories turned on.\n")
+        logging.debug("Skip cloning repositories turned on.\n")
 
     secrets = read_secrets(REQUIRED_SECRETS)
 
@@ -122,19 +127,19 @@ def main():
 
     for repo in uccser_repos:
         os.chdir(directory_of_projects)
-        print("{0}\n{1}\n{2}".format(MAJOR_SEPERATOR, repo.full_name, MINOR_SEPERATOR))
+        logging.debug("{0}\n{1}\n{2}".format(MAJOR_SEPERATOR, repo.full_name, MINOR_SEPERATOR))
         try:
             config_file = repo.get_contents(PROJECT_CONFIG_FILE)
-            print("Config file for Arnold detected.")
+            logging.debug("Config file for Arnold detected.")
         except github.GithubException:
             config_file = None
-            print("Config file for Arnold not detected.")
+            logging.debug("Config file for Arnold not detected.")
         if config_file:
-            print("Reading Arnold config.")
+            logging.debug("Reading Arnold config.")
             try:
                 config = yaml.load(base64.b64decode(config_file.content).decode("utf-8"))
             except yaml.YAMLError:
-                print("Error! YAML file invalid.")
+                logging.error("Error! YAML file invalid.")
                 # TODO: Log issue on repo
             if config:
                 project = Project(config, repo, bot, secrets, directory_of_projects, args)
@@ -142,7 +147,7 @@ def main():
                 os.chdir(project.directory)
                 setup_git_account()
                 project.run()
-        print("{0}\n".format(MAJOR_SEPERATOR))
+        logging.debug("{0}\n".format(MAJOR_SEPERATOR))
     display_elapsed_time(start_time)
 
 

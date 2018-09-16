@@ -1,5 +1,6 @@
 """Module for interacting with the Crowdin API."""
 
+import logging
 import requests
 import os.path
 
@@ -46,7 +47,7 @@ def upload_file_to_crowdin(file_path, project):
     )
     response_data = response.json()
     if response.status_code == requests.codes.ok:
-        print("{} - File uploaded to Crowdin.".format(file_path))
+        logging.debug("{} - File uploaded to Crowdin.".format(file_path))
     elif response_data.get("error", dict()).get("code") == 5:
         response = api_call(
             "update-file",
@@ -55,10 +56,10 @@ def upload_file_to_crowdin(file_path, project):
             json=True
         )
         if response.status_code == requests.codes.ok:
-            print("{} - File updated on Crowdin.".format(file_path))
+            logging.debug("{} - File updated on Crowdin.".format(file_path))
     else:
-        print(response)
-        print(response.json())
+        logging.error(response)
+        logging.error(response.json())
         response.raise_for_status()
 
 
@@ -66,16 +67,16 @@ def create_crowdin_directory(directory, project):
     response = api_call("add-directory", project, name=directory, json=True)
     response_data = response.json()
     if response.status_code == requests.codes.ok:
-        print("{} - Directory created on Crowdin.".format(directory))
+        logging.debug("{} - Directory created on Crowdin.".format(directory))
     elif response_data.get("error", dict()).get("code") == 50:
         message = "{} - {}"
-        print(message.format(directory, response_data["error"]["message"]))
+        logging.debug(message.format(directory, response_data["error"]["message"]))
     else:
         response.raise_for_status()
 
 
 def download_translations(project, translation_zip):
-    print("Downloading translations to {}".format(translation_zip))
+    logging.debug("Downloading translations to {}".format(translation_zip))
     params = {"key": project.crowdin_api_key}
     response = requests.get(
         API_URL.format(project=project.name, method="download/all.zip"),
@@ -83,4 +84,4 @@ def download_translations(project, translation_zip):
     )
     with open(translation_zip, "wb") as f:
         f.write(response.content)
-    print("Download complete.")
+    logging.debug("Download complete.")

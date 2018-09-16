@@ -1,3 +1,4 @@
+import logging
 from linkie import Linkie
 from utils import render_text
 
@@ -7,7 +8,7 @@ def check_links(project):
     linkie_config = project.config.get("broken-link-checker", dict())
     checker = Linkie(config=linkie_config)
     result = checker.run()
-    print()
+    logging.debug()
 
     broken_links = dict()
     for url, url_data in checker.urls.items():
@@ -31,17 +32,17 @@ def check_links(project):
     # If existing issue and no errors, close issue
     if existing_issue and not result:
         message = "Closing existing issue, as link checker now detects no broken links."
-        print(message)
+        logging.debug(message)
         existing_issue.create_comment(message)
         existing_issue.edit(state="closed")
     # Else if existing issue and errors
     elif existing_issue and result:
-        print("Checking if existing issue matches result.")
+        logging.debug("Checking if existing issue matches result.")
         if header_text == existing_issue.title and body_text == existing_issue.body:
-            print("Existing issue is up to date.")
+            logging.debug("Existing issue is up to date.")
         else:
             message = "Updating issue to match latest broken link checker results."
-            print(message)
+            logging.debug(message)
             existing_issue.edit(title=header_text, body=body_text)
             existing_issue.create_comment(message)
     # Else if no existing issue and errors, create issue
