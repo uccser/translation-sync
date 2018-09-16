@@ -33,6 +33,7 @@ SEPERATOR_WIDTH = 60
 MAJOR_SEPERATOR = "=" * SEPERATOR_WIDTH
 MINOR_SEPERATOR = "-" * SEPERATOR_WIDTH
 
+logging.basicConfig(level=logging.DEBUG)
 client = google.cloud.logging.Client()
 client.setup_logging(log_level=logging.INFO)
 
