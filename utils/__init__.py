@@ -78,4 +78,4 @@ def get_crowdin_api_key(project_name, secrets):
 
 def git_reset():
     run_shell(["git", "reset", "--hard"])
-    run_shell(["git", "clean", "-fdx"])
+    run_shell(["sudo", "git", "clean", "-fdx"])
