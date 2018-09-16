@@ -1,5 +1,5 @@
 from .crowdin_api import API_URL
-import requests
+from utils import run_shell
 
 
 def build_project(project):
