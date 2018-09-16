@@ -47,7 +47,7 @@ def upload_file_to_crowdin(file_path, project):
     )
     response_data = response.json()
     if response.status_code == requests.codes.ok:
-        logging.debug("{} - File uploaded to Crowdin.".format(file_path))
+        logging.info("{} - File uploaded to Crowdin.".format(file_path))
     elif response_data.get("error", dict()).get("code") == 5:
         response = api_call(
             "update-file",
@@ -56,7 +56,7 @@ def upload_file_to_crowdin(file_path, project):
             json=True
         )
         if response.status_code == requests.codes.ok:
-            logging.debug("{} - File updated on Crowdin.".format(file_path))
+            logging.info("{} - File updated on Crowdin.".format(file_path))
     else:
         logging.error(response)
         logging.error(response.json())
@@ -67,16 +67,16 @@ def create_crowdin_directory(directory, project):
     response = api_call("add-directory", project, name=directory, json=True)
     response_data = response.json()
     if response.status_code == requests.codes.ok:
-        logging.debug("{} - Directory created on Crowdin.".format(directory))
+        logging.info("{} - Directory created on Crowdin.".format(directory))
     elif response_data.get("error", dict()).get("code") == 50:
         message = "{} - {}"
-        logging.debug(message.format(directory, response_data["error"]["message"]))
+        logging.info(message.format(directory, response_data["error"]["message"]))
     else:
         response.raise_for_status()
 
 
 def download_translations(project, translation_zip):
-    logging.debug("Downloading translations to {}".format(translation_zip))
+    logging.info("Downloading translations to {}".format(translation_zip))
     params = {"key": project.crowdin_api_key}
     response = requests.get(
         API_URL.format(project=project.name, method="download/all.zip"),
@@ -84,4 +84,4 @@ def download_translations(project, translation_zip):
     )
     with open(translation_zip, "wb") as f:
         f.write(response.content)
-    logging.debug("Download complete.")
+    logging.info("Download complete.")

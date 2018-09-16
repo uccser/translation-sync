@@ -23,9 +23,9 @@ def update_source_message_file(project):
     reset_message_file_comments(translation_data["django-message-file"])
     diff_result = run_shell(["git", "diff", "--cached", "--quiet"], check=False)
     if diff_result.returncode == 1:
-        logging.debug("Changes to source message file to push.")
+        logging.info("Changes to source message file to push.")
         run_shell(["git", "commit", "-m", "Update source language message file (django.po)"])
         run_shell(["git", "push", "origin", pr_branch])
     else:
-        logging.debug("No changes to source message file to push.")
+        logging.info("No changes to source message file to push.")
     git_reset()

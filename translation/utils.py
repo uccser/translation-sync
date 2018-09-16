@@ -26,5 +26,5 @@ def reset_message_file_comments(message_file_path):
             unstage_message_file = False
         i += 1
     if unstage_message_file:
-        logging.debug("Message file '{}' only has trivial changes, unstaging file...".format(message_file_path))
+        logging.info("Message file '{}' only has trivial changes, unstaging file...".format(message_file_path))
         run_shell(["git", "reset", "HEAD", message_file_path])

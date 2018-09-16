@@ -80,7 +80,7 @@ def copy_approved_files(project, extract_location, approved_files, language):
         if not os.path.exists(destination_directory):
             os.makedirs(destination_directory, exist_ok=True)
         copy(source, destination)
-        logging.debug("Copied {}".format(approved_file_destination))
+        logging.info("Copied {}".format(approved_file_destination))
 
 
 def pull_translations(project):
@@ -98,7 +98,7 @@ def pull_translations(project):
 
     for crowdin_language_code in project_languages:
         language = locale_mapping[crowdin_language_code]
-        logging.debug("Processing '{}' language...".format(language))
+        logging.info("Processing '{}' language...".format(language))
         target_branch = project.config["translation"]["branches"]["translation-target"]
         pr_branch = BRANCH_PREFIX + language
         checkout_branch(target_branch)
@@ -115,12 +115,12 @@ def pull_translations(project):
             reset_message_file_comments(message_file_path)
         diff_result = run_shell(["git", "diff", "--cached", "--quiet"], check=False)
         if diff_result.returncode == 1:
-            logging.debug("Changes to '{}' language to push.".format(language))
+            logging.info("Changes to '{}' language to push.".format(language))
             run_shell(["git", "commit", "-m", "Update '{}' language translations".format(language)])
             run_shell(["git", "push", "origin", pr_branch])
             existing_pulls = project.repo.get_pulls(state="open", head="uccser:" + pr_branch, base=target_branch)
             if len(list(existing_pulls)) > 0:
-                logging.debug("Existing pull request detected.")
+                logging.info("Existing pull request detected.")
             else:
                 context = {
                     "language": language,
@@ -134,7 +134,7 @@ def pull_translations(project):
                 head=pr_branch,
                 )
                 pull.add_to_labels("internationalization")
-                logging.debug("Pull request created: {} (#{})".format(pull.title, pull.number))
+                logging.info("Pull request created: {} (#{})".format(pull.title, pull.number))
         else:
-            logging.debug("No changes to '{}' translation to push.".format(language))
+            logging.info("No changes to '{}' translation to push.".format(language))
         git_reset()

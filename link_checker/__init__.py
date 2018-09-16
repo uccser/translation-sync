@@ -31,17 +31,17 @@ def check_links(project):
     # If existing issue and no errors, close issue
     if existing_issue and not result:
         message = "Closing existing issue, as link checker now detects no broken links."
-        logging.debug(message)
+        logging.info(message)
         existing_issue.create_comment(message)
         existing_issue.edit(state="closed")
     # Else if existing issue and errors
     elif existing_issue and result:
-        logging.debug("Checking if existing issue matches result.")
+        logging.info("Checking if existing issue matches result.")
         if header_text == existing_issue.title and body_text == existing_issue.body:
-            logging.debug("Existing issue is up to date.")
+            logging.info("Existing issue is up to date.")
         else:
             message = "Updating issue to match latest broken link checker results."
-            logging.debug(message)
+            logging.info(message)
             existing_issue.edit(title=header_text, body=body_text)
             existing_issue.create_comment(message)
     # Else if no existing issue and errors, create issue

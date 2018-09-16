@@ -34,11 +34,9 @@ SEPERATOR_WIDTH = 60
 MAJOR_SEPERATOR = "=" * SEPERATOR_WIDTH
 MINOR_SEPERATOR = "-" * SEPERATOR_WIDTH
 
+logging.getLogger().setLevel(logging.DEBUG)
 client = google.cloud.logging.Client()
-handler = CloudLoggingHandler(client)
-logging.getLogger().setLevel(logging.INFO)
-client.setup_logging(log_level=logging.INFO)
-setup_logging(handler)
+client.setup_logging(log_level=logging.DEBUG)
 
 
 def setup_git_account():
@@ -67,7 +65,7 @@ class Project:
     def clone(self):
         """Clone the repository, deleting any existing installations."""
         if os.path.isdir(self.directory) and not self.cli_args.skip_clone:
-            logging.debug("Existing repository detected! Deleting existing directory...")
+            logging.info("Existing repository detected! Deleting existing directory...")
             rmtree(self.repo.name)
         run_shell(["git", "clone", self.repo.ssh_url])
 
@@ -111,7 +109,7 @@ def main():
     )
     args = parser.parse_args()
     if args.skip_clone:
-        logging.debug("Skip cloning repositories turned on.\n")
+        logging.info("Skip cloning repositories turned on.\n")
 
     secrets = read_secrets(REQUIRED_SECRETS)
 
@@ -130,15 +128,15 @@ def main():
 
     for repo in uccser_repos:
         os.chdir(directory_of_projects)
-        logging.debug("{0}\n{1}\n{2}".format(MAJOR_SEPERATOR, repo.full_name, MINOR_SEPERATOR))
+        logging.info("{0}\n{1}\n{2}".format(MAJOR_SEPERATOR, repo.full_name, MINOR_SEPERATOR))
         try:
             config_file = repo.get_contents(PROJECT_CONFIG_FILE)
-            logging.debug("Config file for Arnold detected.")
+            logging.info("Config file for Arnold detected.")
         except github.GithubException:
             config_file = None
-            logging.debug("Config file for Arnold not detected.")
+            logging.info("Config file for Arnold not detected.")
         if config_file:
-            logging.debug("Reading Arnold config.")
+            logging.info("Reading Arnold config.")
             try:
                 config = yaml.load(base64.b64decode(config_file.content).decode("utf-8"))
             except yaml.YAMLError:
@@ -150,7 +148,7 @@ def main():
                 os.chdir(project.directory)
                 setup_git_account()
                 project.run()
-        logging.debug("{0}\n".format(MAJOR_SEPERATOR))
+        logging.info("{0}\n".format(MAJOR_SEPERATOR))
     display_elapsed_time(start_time)
 
 

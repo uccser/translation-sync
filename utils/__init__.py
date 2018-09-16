@@ -19,12 +19,12 @@ def run_shell(commands, display=True, check=True):
         result = subprocess.run(command, check=check, stdout=subprocess.PIPE)
         result_message = result.stdout.decode("utf-8")
         if display and result_message:
-            logging.debug(result_message)
+            logging.info(result_message)
     return result
 
 
 def read_secrets(required_secrets):
-    logging.debug("Reading secrets file...")
+    logging.info("Reading secrets file...")
     with open("secrets.yaml", "r") as secrets_file:
         secrets_yaml = secrets_file.read()
 
@@ -32,21 +32,21 @@ def read_secrets(required_secrets):
         secrets = yaml.load(secrets_yaml)
     except yaml.YAMLError:
         logging.error("Error! Secrets YAML file invalid.")
-    logging.debug("Checking secrets...")
+    logging.info("Checking secrets...")
     for (key, description) in required_secrets:
         try:
             secrets[key]
         except KeyError:
             message = "ERROR! Secret '{}' not found!\n  - Key description: {}"
             raise LookupError(message.format(key, description))
-        logging.debug("  - '{}' set correctly.".format(key))
+        logging.info("  - '{}' set correctly.".format(key))
     return secrets
 
 
 def checkout_branch(branch):
     try:
         result = run_shell(["git", "checkout", branch], display=False)
-        logging.debug(result.stdout.decode("utf-8"))
+        logging.info(result.stdout.decode("utf-8"))
     except subprocess.CalledProcessError:
         run_shell(["git", "checkout", "-b", branch])
 
@@ -60,17 +60,17 @@ def render_text(path, context):
 def display_elapsed_time(start_time):
     mins = (timer() - start_time) // 60
     secs = (timer() - start_time) % 60
-    logging.debug("Process took {:.0f}m {:.1f}s.\n".format(mins, secs))
+    logging.info("Process took {:.0f}m {:.1f}s.\n".format(mins, secs))
 
 
 def get_crowdin_api_key(project_name, secrets):
     allowed = set(ascii_uppercase)
     key = "".join(l for l in project_name.upper() if l in allowed)
     key += "_CROWDIN_API_KEY"
-    logging.debug("Checking for secret '{}'".format(key))
+    logging.info("Checking for secret '{}'".format(key))
     try:
         value = secrets[key]
-        logging.debug("Found secret '{}'".format(key))
+        logging.info("Found secret '{}'".format(key))
     except KeyError:
         message = "ERROR! Secret '{}' not found!"
         raise LookupError(message.format(key))
