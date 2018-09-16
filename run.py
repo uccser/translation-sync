@@ -19,6 +19,7 @@ from link_checker import check_links
 import argparse
 import github
 import google.cloud.logging
+from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
 from timeit import default_timer as timer
 
 DEFAULT_WORKING_DIRECTORY = os.getcwd()
@@ -33,9 +34,11 @@ SEPERATOR_WIDTH = 60
 MAJOR_SEPERATOR = "=" * SEPERATOR_WIDTH
 MINOR_SEPERATOR = "-" * SEPERATOR_WIDTH
 
-logging.basicConfig(level=logging.DEBUG)
 client = google.cloud.logging.Client()
+handler = CloudLoggingHandler(client)
+logging.getLogger().setLevel(logging.INFO)
 client.setup_logging(log_level=logging.INFO)
+setup_logging(handler)
 
 
 def setup_git_account():
