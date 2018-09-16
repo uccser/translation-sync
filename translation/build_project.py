@@ -1,17 +1,9 @@
 from .crowdin_api import API_URL
-import requests
+from utils import run_shell
 
 
 def build_project(project):
-    params = {
-        "key": project.crowdin_api_key,
-        "json": True,
-    }
-    response = requests.get(
-        API_URL.format(project=project.name, method="export"),
-        params=params,
-        stream=True,
-    )
-    response_data = response.json()
-    print(response_data)
-    return response_data
+    print("Triggering build of translations for {}...".format(project.name))
+    url = API_URL.format(project=project.name, method="export")
+    url += "?key={key}".format(key=project.crowdin_api_key)
+    run_shell(["curl", url])
