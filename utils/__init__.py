@@ -46,8 +46,9 @@ def read_secrets(required_secrets):
 def checkout_branch(branch):
     try:
         result = run_shell(["git", "checkout", branch], display=False)
-        logging.info("Checked out to existing branch")
+        logging.info("Checked out to existing branch on GitHub")
         logging.info(result.stdout.decode("utf-8"))
+        run_shell(["git", "pull"])
     except subprocess.CalledProcessError:
         run_shell(["git", "checkout", "-b", branch])
         logging.info("Checked out to new branch")
