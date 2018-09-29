@@ -1,3 +1,0 @@
-Update source language message file (django.po)
-
-This pull request updates the source language (English) message file.

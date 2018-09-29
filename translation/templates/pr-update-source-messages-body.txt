@@ -1,0 +1,5 @@
+This pull request updates the source language (English) message files:
+
+{% for message_file in message_files %}
+  - `{{ message_file }}`
+{%- endfor %}

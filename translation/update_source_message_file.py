@@ -5,6 +5,7 @@ from utils import (
     run_shell,
     checkout_branch,
     git_reset,
+    render_text,
 )
 from .constants import BRANCH_PREFIX
 from .utils import reset_message_file_comments
@@ -30,6 +31,29 @@ def update_source_message_file(project):
         logging.info("Changes to source message files to push.")
         run_shell(["git", "commit", "-m", "Update source language message files"])
         run_shell(["git", "push", "origin", pr_branch])
+        existing_pulls = project.repo.get_pulls(state="open", head="uccser:" + pr_branch, base=target_branch)
+        if len(list(existing_pulls)) > 0:
+            logging.info("Existing pull request detected.")
+        else:
+            context = {
+                "message_files": message_files,
+            }
+            header_text = render_text(
+                "translation/templates/pr-update-source-messages-header.txt",
+                context
+            )
+            body_text = render_text(
+                "translation/templates/pr-update-source-messages-body.txt",
+                context
+            )
+            pull = project.repo.create_pull(
+                title=header_text,
+                body=body_text,
+                base=target_branch,
+                head=pr_branch,
+            )
+            pull.add_to_labels("internationalization")
+            logging.info("Pull request created: {} (#{})".format(pull.title, pull.number))
     else:
         logging.info("No changes to source message files to push.")
     git_reset()

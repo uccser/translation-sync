@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import base64
 import yaml
@@ -49,6 +50,14 @@ logging.getLogger().setLevel(logging.INFO)
 client = google.cloud.logging.Client()
 client.setup_logging(log_level=logging.INFO)
 
+# From https://stackoverflow.com/a/16993115
+def handle_exception(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+    logging.critical("Uncaught exception!", exc_info=(exc_type, exc_value, exc_traceback))
+
+sys.excepthook = handle_exception
 
 class Project:
 
@@ -71,7 +80,7 @@ class Project:
         """Clone the repository, deleting any existing installations."""
         if os.path.isdir(self.directory) and not self.cli_args.skip_clone:
             logging.info("Existing repository detected! Deleting existing directory...")
-            rmtree(self.repo.name)
+            run_shell(["sudo", "rm", "-r", self.directory])
         run_shell(["git", "clone", self.repo.ssh_url])
 
     def run(self):
@@ -81,7 +90,7 @@ class Project:
 
         if self.config.get("translation"):
             self.crowdin_api_key = get_crowdin_api_key(self.name, self.secrets)
-            if self.cli_args.task in TASK_KEYWORDS["link-checker"]:
+            if self.cli_args.task in TASK_KEYWORDS["update-source-message-files"]:
                 update_source_message_file(self)
                 self.display_elapsed_time()
             if self.cli_args.task in TASK_KEYWORDS["push-source-files"]:
