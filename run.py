@@ -80,7 +80,7 @@ class Project:
         """Clone the repository, deleting any existing installations."""
         if os.path.isdir(self.directory) and not self.cli_args.skip_clone:
             logging.info("Existing repository detected! Deleting existing directory...")
-            rmtree(self.repo.name)
+            run_shell(["sudo", "rm", "-r", self.directory])
         run_shell(["git", "clone", self.repo.ssh_url])
 
     def run(self):
