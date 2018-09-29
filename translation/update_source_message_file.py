@@ -5,6 +5,7 @@ from utils import (
     run_shell,
     checkout_branch,
     git_reset,
+    render_text,
 )
 from .constants import BRANCH_PREFIX
 from .utils import reset_message_file_comments
