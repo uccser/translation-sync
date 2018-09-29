@@ -81,7 +81,7 @@ class Project:
 
         if self.config.get("translation"):
             self.crowdin_api_key = get_crowdin_api_key(self.name, self.secrets)
-            if self.cli_args.task in TASK_KEYWORDS["link-checker"]:
+            if self.cli_args.task in TASK_KEYWORDS["update-source-message-files"]:
                 update_source_message_file(self)
                 self.display_elapsed_time()
             if self.cli_args.task in TASK_KEYWORDS["push-source-files"]:

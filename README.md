@@ -62,10 +62,16 @@ pip3 install -r requirements.txt
 ## Usage
 
 First connect via SSH and change into the Arnold directory (`cd arnold`).
-To run Arnold with default settings, enter the following command: `python3 run.py`
+To run Arnold with default settings, enter the following command: `python3 run.py [TASK]`, where task is one of the following:
+
+- `link-checker`: Check for broken links
+- `update-source-message-files`: Update source message files
+- `push-source-files`: Push source files to Crowdin
+- `build-project`: Build project on Crowdin
+- `pull-translations`: Pull translations from Crowdin
+- `all`: Run all tasks
 
 The following flags can also be used:
 
 - `--repo REPO` or `-r REPO`: Run only on the given repository, where `REPO` is the project slug (for example: `cs-unplugged`)
-- `--skip-link-checker` or `-lc`: Skip checking for broken links
-- `--skip-clone` or `-c`: Skip cloning repositories
+- `--skip-clone` or `-c`: Skip cloning repositories (not recommended)
