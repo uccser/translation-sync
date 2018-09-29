@@ -2,6 +2,7 @@
 PyGithub==1.40
 Jinja2==2.10
 PyYAML==4.2b4
+google-cloud-logging==1.7.0
 
 # Translations
 requests==2.19.1

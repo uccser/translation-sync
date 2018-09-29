@@ -1,4 +1,5 @@
 import os
+import logging
 import base64
 import yaml
 from shutil import rmtree
@@ -17,8 +18,9 @@ from translation import (
 from link_checker import check_links
 import argparse
 import github
+import google.cloud.logging
+from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
 from timeit import default_timer as timer
-
 
 DEFAULT_WORKING_DIRECTORY = os.getcwd()
 PROJECT_DIRECTORY = "projects"
@@ -31,12 +33,21 @@ PROJECT_CONFIG_FILE = ".arnold.yaml"
 SEPERATOR_WIDTH = 60
 MAJOR_SEPERATOR = "=" * SEPERATOR_WIDTH
 MINOR_SEPERATOR = "-" * SEPERATOR_WIDTH
+ALL_TASKS_KEYWORD = "all"
+TASKS = [
+    "link-checker",
+    "update-source-message-files",
+    "push-source-files",
+    "build-project",
+    "pull-translations",
+]
+TASK_KEYWORDS = dict()
+for keyword in TASKS:
+    TASK_KEYWORDS[keyword] = [keyword, ALL_TASKS_KEYWORD]
 
-
-def setup_git_account():
-    """Set the name and email account of the git account."""
-    run_shell(["git", "config", "user.name", GITHUB_BOT_NAME])
-    run_shell(["git", "config", "user.email", GITHUB_BOT_EMAIL])
+logging.getLogger().setLevel(logging.INFO)
+client = google.cloud.logging.Client()
+client.setup_logging(log_level=logging.INFO)
 
 
 class Project:
@@ -59,30 +70,38 @@ class Project:
     def clone(self):
         """Clone the repository, deleting any existing installations."""
         if os.path.isdir(self.directory) and not self.cli_args.skip_clone:
-            print("Existing repository detected! Deleting existing directory...")
+            logging.info("Existing repository detected! Deleting existing directory...")
             rmtree(self.repo.name)
         run_shell(["git", "clone", self.repo.ssh_url])
 
     def run(self):
-        if self.config.get("broken-link-checker") and not self.cli_args.skip_link_checker:
+        if self.cli_args.task in TASK_KEYWORDS["link-checker"] and self.config.get("broken-link-checker"):
             check_links(self)
             self.display_elapsed_time()
 
         if self.config.get("translation"):
             self.crowdin_api_key = get_crowdin_api_key(self.name, self.secrets)
-            update_source_message_file(self)
-            self.display_elapsed_time()
-            push_source_files(self)
-            self.display_elapsed_time()
-            build_project(self)
-            self.display_elapsed_time()
-            pull_translations(self)
-            self.display_elapsed_time()
+            if self.cli_args.task in TASK_KEYWORDS["link-checker"]:
+                update_source_message_file(self)
+                self.display_elapsed_time()
+            if self.cli_args.task in TASK_KEYWORDS["push-source-files"]:
+                push_source_files(self)
+                self.display_elapsed_time()
+            if self.cli_args.task in TASK_KEYWORDS["build-project"]:
+                build_project(self)
+                self.display_elapsed_time()
+            if self.cli_args.task in TASK_KEYWORDS["pull-translations"]:
+                pull_translations(self)
+                self.display_elapsed_time()
 
 
 def main():
     start_time = timer()
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "task",
+        help="The task to run"
+    )
     parser.add_argument(
         "-c",
         "--skip-clone",
@@ -95,15 +114,9 @@ def main():
         help="Run only on the given repository",
         action="store"
     )
-    parser.add_argument(
-        "-lc",
-        "--skip-link-checker",
-        help="Skip checking for broken links",
-        action="store_true"
-    )
     args = parser.parse_args()
     if args.skip_clone:
-        print("Skip cloning repositories turned on.\n")
+        logging.info("Skip cloning repositories turned on.\n")
 
     secrets = read_secrets(REQUIRED_SECRETS)
 
@@ -122,19 +135,19 @@ def main():
 
     for repo in uccser_repos:
         os.chdir(directory_of_projects)
-        print("{0}\n{1}\n{2}".format(MAJOR_SEPERATOR, repo.full_name, MINOR_SEPERATOR))
+        logging.info("{0}\n{1}\n{2}".format(MAJOR_SEPERATOR, repo.full_name, MINOR_SEPERATOR))
         try:
             config_file = repo.get_contents(PROJECT_CONFIG_FILE)
-            print("Config file for Arnold detected.")
+            logging.info("Config file for Arnold detected.")
         except github.GithubException:
             config_file = None
-            print("Config file for Arnold not detected.")
+            logging.info("Config file for Arnold not detected.")
         if config_file:
-            print("Reading Arnold config.")
+            logging.info("Reading Arnold config.")
             try:
                 config = yaml.load(base64.b64decode(config_file.content).decode("utf-8"))
             except yaml.YAMLError:
-                print("Error! YAML file invalid.")
+                logging.error("Error! YAML file invalid.")
                 # TODO: Log issue on repo
             if config:
                 project = Project(config, repo, bot, secrets, directory_of_projects, args)
@@ -142,8 +155,14 @@ def main():
                 os.chdir(project.directory)
                 setup_git_account()
                 project.run()
-        print("{0}\n".format(MAJOR_SEPERATOR))
+        logging.info("{0}\n".format(MAJOR_SEPERATOR))
     display_elapsed_time(start_time)
+
+
+def setup_git_account():
+    """Set the name and email account of the git account."""
+    run_shell(["git", "config", "user.name", GITHUB_BOT_NAME])
+    run_shell(["git", "config", "user.email", GITHUB_BOT_EMAIL])
 
 
 if __name__ == "__main__":

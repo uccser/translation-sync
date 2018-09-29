@@ -1,5 +1,6 @@
 """Modules used in translating repositories."""
 
+import logging
 from utils import (
     run_shell,
     checkout_branch,
@@ -18,13 +19,17 @@ def update_source_message_file(project):
     run_shell(translation_data["commands"]["start"])
     run_shell(translation_data["commands"]["makemessages"])
     run_shell(translation_data["commands"]["end"])
-    run_shell(["git", "add", translation_data["django-message-file"]])
-    reset_message_file_comments(translation_data["django-message-file"])
+    message_files = translation_data["django-message-file"]
+    if not isinstance(message_files, list):
+        message_files = [message_files]
+    for message_file in message_files:
+        run_shell(["git", "add", message_file])
+        reset_message_file_comments(message_file)
     diff_result = run_shell(["git", "diff", "--cached", "--quiet"], check=False)
     if diff_result.returncode == 1:
-        print("Changes to source message file to push.")
-        run_shell(["git", "commit", "-m", "Update source language message file (django.po)"])
+        logging.info("Changes to source message files to push.")
+        run_shell(["git", "commit", "-m", "Update source language message files"])
         run_shell(["git", "push", "origin", pr_branch])
     else:
-        print("No changes to source message file to push.")
+        logging.info("No changes to source message files to push.")
     git_reset()
