@@ -6,10 +6,14 @@ from .crowdin_api import (
     create_crowdin_directory,
 )
 from .constants import SOURCE_LANGUAGE
-from utils import git_reset
+from utils import (
+    git_reset,
+    checkout_branch,
+)
 
 
 def push_source_files(project):
+    checkout_branch(project.config["translation"]["branches"]["translation-source"])
     translation_data = project.config["translation"]
     existing_directories = set()
     valid_file_types = tuple(translation_data["file-types"])

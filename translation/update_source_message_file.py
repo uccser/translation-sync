@@ -13,6 +13,7 @@ from .utils import reset_message_file_comments
 
 def update_source_message_file(project):
     translation_data = project.config["translation"]
+    checkout_branch(translation_data["branches"]["translation-source"])
     target_branch = translation_data["branches"]["update-messages-target"]
     pr_branch = BRANCH_PREFIX + "update-messages"
     checkout_branch(pr_branch)
