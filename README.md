@@ -9,12 +9,12 @@ Arnold is still in development, but here are some of his features:
 - Check for broken URL links.
 - Update Django message files.
 - Push, build, and pull translations to and from Crowdin.
+- Logging to Google Cloud Platform logging.
 
 The following features are planned for Arnold one day:
 
 - Support of managing in-context translations on Crowdin.
 - Test suite.
-- Error logging, possibly also by email and Slack.
 
 ## Installation
 
@@ -75,3 +75,25 @@ The following flags can also be used:
 
 - `--repo REPO` or `-r REPO`: Run only on the given repository, where `REPO` is the project slug (for example: `cs-unplugged`)
 - `--skip-clone` or `-c`: Skip cloning repositories (not recommended)
+
+## Schedule
+
+The server has the following tasks set via `cron` tasks.
+
+| Task                          | UTC Time | NZST Time | NZDT Time |
+|-------------------------------|----------|-----------|-----------|
+| `update-source-message-files` | 3 AM     | 3 PM      | 4 PM      |
+| `push-source-files`           | 10 AM    | 10 PM     | 11 PM     |
+| `build-project`               | 2 PM     | 2 AM      | 3 AM      |
+| `pull-translations`           | 7 PM     | 7 AM      | 8 AM      |
+| `link-checker`                | 11 PM    | 11 AM     | 12 PM     |
+
+The raw crontab is as follows:
+
+```
+0 3 * * * cd /home/csse_education_research/arnold/ && python3 run.py update-source-message-files
+0 10 * * * cd /home/csse_education_research/arnold/ && python3 run.py push-source-files
+0 14 * * * cd /home/csse_education_research/arnold/ && python3 run.py build-project
+0 19 * * * cd /home/csse_education_research/arnold/ && python3 run.py pull-translations
+0 23 * * * cd /home/csse_education_research/arnold/ && python3 run.py link-checker
+```
