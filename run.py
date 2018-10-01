@@ -170,8 +170,8 @@ def main():
 
 def setup_git_account():
     """Set the name and email account of the git account."""
-    run_shell(["git", "config", "user.name", GITHUB_BOT_NAME])
-    run_shell(["git", "config", "user.email", GITHUB_BOT_EMAIL])
+    run_shell(["git", "config", "--global", "user.name", GITHUB_BOT_NAME])
+    run_shell(["git", "config", "--global", "user.email", GITHUB_BOT_EMAIL])
 
 
 if __name__ == "__main__":
