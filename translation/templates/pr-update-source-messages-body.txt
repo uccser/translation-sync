@@ -1,5 +1,1 @@
-This pull request updates the source language (English) message files:
-
-{% for message_file in message_files %}
-  - `{{ message_file }}`
-{%- endfor %}
+This pull request updates{% if message_files|length > 1 %} one or more of {% endif %}the source language (English) message file{% if message_files|length > 1 %}s{% endif %}.
