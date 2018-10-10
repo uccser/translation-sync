@@ -79,7 +79,10 @@ def copy_approved_files(project, extract_location, approved_files, language):
         destination_directory = os.path.dirname(destination)
         if not os.path.exists(destination_directory):
             os.makedirs(destination_directory, exist_ok=True)
-        copy(source, destination)
+        try:
+            copy(source, destination)
+        except FileNotFoundError:
+            logging.error("Could not copy file {}, it probably doesn't exist. Check if Crowdin has outdated files.".format(source))
         logging.info("Copied {}".format(approved_file_destination))
 
 
