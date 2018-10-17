@@ -120,7 +120,7 @@ def pull_translations(project):
         run_shell(["git", "add", "-A"])
         message_files = glob.glob("./**/{}/**/*.po".format(language), recursive=True)
         for message_file_path in message_files:
-            if message_file_path in existing_files:
+            if "./" + message_file_path in existing_files:
                 reset_message_file_comments(message_file_path)
         diff_result = run_shell(["git", "diff", "--cached", "--quiet"], check=False)
         if diff_result.returncode == 1:
