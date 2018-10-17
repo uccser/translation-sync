@@ -36,6 +36,6 @@ def get_existing_files_at_head():
     Returns:
         Set of filenames.
     """
-    file_list = run_shell(['git', 'ls-tree', '-r', 'HEAD', '--name-only'])
+    file_list = run_shell(['git', 'ls-tree', '-r', 'HEAD', '--name-only'], display=False)
     filenames = file_list.stdout.decode("utf-8").split('\n')
     return set(filenames)
