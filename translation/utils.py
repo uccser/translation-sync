@@ -28,3 +28,14 @@ def reset_message_file_comments(message_file_path):
     if unstage_message_file:
         logging.info("Message file '{}' only has trivial changes, unstaging file...".format(message_file_path))
         run_shell(["git", "reset", "HEAD", message_file_path])
+
+
+def get_existing_files_at_head():
+    """Return a set of all filenames at the git HEAD.
+
+    Returns:
+        Set of filenames.
+    """
+    file_list = run_shell(['git', 'ls-tree', '-r', 'HEAD', '--name-only'])
+    filenames = file_list.stdout.decode("utf-8").split('\n')
+    return set(filenames)

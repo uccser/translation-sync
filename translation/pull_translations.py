@@ -11,7 +11,10 @@ from utils import (
 )
 from .crowdin_api import api_call, download_translations
 from .constants import BRANCH_PREFIX, SOURCE_LANGUAGE
-from .utils import reset_message_file_comments
+from .utils import (
+    reset_message_file_comments,
+    get_existing_files_at_head,
+)
 
 TRANSLATION_ZIP = "crowdin-translations.zip"
 TEMPORARY_TRANSLATION_DIRECTORY = "project-translations"
@@ -110,12 +113,15 @@ def pull_translations(project):
         response = api_call("language-status", project, json=True, language=crowdin_language_code)
         approved_files = get_approved_files(response.json())
 
+        existing_files = get_existing_files_at_head()
+
         copy_approved_files(project, extract_location, approved_files, language)
 
         run_shell(["git", "add", "-A"])
         message_files = glob.glob("./**/{}/**/*.po".format(language), recursive=True)
         for message_file_path in message_files:
-            reset_message_file_comments(message_file_path)
+            if message_file_path in existing_files:
+                reset_message_file_comments(message_file_path)
         diff_result = run_shell(["git", "diff", "--cached", "--quiet"], check=False)
         if diff_result.returncode == 1:
             logging.info("Changes to '{}' language to push.".format(language))
