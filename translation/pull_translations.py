@@ -20,18 +20,27 @@ TRANSLATION_ZIP = "crowdin-translations.zip"
 TEMPORARY_TRANSLATION_DIRECTORY = "project-translations"
 
 
-def get_osx_locale_mapping(project):
+def get_language_mapping(project):
     """Get dictionary mapping Crowdin language codes to osx_locale_codes.
 
     See https://support.crowdin.com/api/supported-languages/
+
+    Returns:
+        Dictionary mapping Crowdin language code to OSX locale codes.
     """
     response = api_call("supported-languages", project, json=True)
     languages_json = response.json()
-    mapping = {
-        language["crowdin_code"]: language["osx_locale"] for language in languages_json
-    }
-    # TODO: Language overrides
-    return mapping
+    languages = dict()
+    mapping_overrides = project.config["translation"]["language-mapping-overrides"]
+    for language in languages_json:
+        crowdin_code = language["crowdin_code"]
+        osx_locale = language["osx_locale"]
+        django_code = mapping_overrides.get(crowdin_code, default=osx_locale)
+        languages[crowdin_code] = {
+            "osx_locale": osx_locale,
+            "django_code": django_code,
+        }
+    return languages
 
 
 def get_project_languages(project):
@@ -90,9 +99,7 @@ def copy_approved_files(project, extract_location, approved_files, language):
 
 
 def pull_translations(project):
-    locale_mapping = get_osx_locale_mapping(project)
-    language_mapping_overrides = project.config["translation"]["language-mapping-overrides"]
-    locale_mapping.update(language_mapping_overrides)
+    locale_mapping = get_language_mapping(project)
     project_languages = get_project_languages(project)
 
     # Download ZIP of translations
@@ -103,10 +110,11 @@ def pull_translations(project):
     os.remove(TRANSLATION_ZIP)
 
     for crowdin_language_code in project_languages:
-        language = locale_mapping[crowdin_language_code]
-        logging.info("Processing '{}' language...".format(language))
+        source_language = locale_mapping[crowdin_language_code]["osx_locale"]
+        destination_language = locale_mapping[crowdin_language_code]["django_code"]
+        logging.info("Processing '{}' language...".format(source_language))
         target_branch = project.config["translation"]["branches"]["translation-target"]
-        pr_branch = BRANCH_PREFIX + language
+        pr_branch = BRANCH_PREFIX + source_language
         checkout_branch(target_branch)
         checkout_branch(pr_branch)
         run_shell(["git", "merge", "origin/" + target_branch, "--quiet", "--no-edit"])
@@ -115,24 +123,24 @@ def pull_translations(project):
 
         existing_files = get_existing_files_at_head()
 
-        copy_approved_files(project, extract_location, approved_files, language)
+        copy_approved_files(project, extract_location, approved_files, destination_language)
 
         run_shell(["git", "add", "-A"])
-        message_files = glob.glob("./**/{}/**/*.po".format(language), recursive=True)
+        message_files = glob.glob("./**/{}/**/*.po".format(destination_language), recursive=True)
         for message_file_path in message_files:
             if ("./" + message_file_path) in existing_files:
                 reset_message_file_comments(message_file_path)
         diff_result = run_shell(["git", "diff", "--cached", "--quiet"], check=False)
         if diff_result.returncode == 1:
-            logging.info("Changes to '{}' language to push.".format(language))
-            run_shell(["git", "commit", "-m", "Update '{}' language translations".format(language)])
+            logging.info("Changes to '{}' language to push.".format(source_language))
+            run_shell(["git", "commit", "-m", "Update '{}' language translations".format(destination_language)])
             run_shell(["git", "push", "origin", pr_branch])
             existing_pulls = project.repo.get_pulls(state="open", head="uccser:" + pr_branch, base=target_branch)
             if len(list(existing_pulls)) > 0:
                 logging.info("Existing pull request detected.")
             else:
                 context = {
-                    "language": language,
+                    "language": destination_language,
                 }
                 header_text = render_text("translation/templates/pr-pull-translations-header.txt", context)
                 body_text = render_text("translation/templates/pr-pull-translations-body.txt", context)
@@ -145,5 +153,5 @@ def pull_translations(project):
                 pull.add_to_labels("internationalization")
                 logging.info("Pull request created: {} (#{})".format(pull.title, pull.number))
         else:
-            logging.info("No changes to '{}' translation to push.".format(language))
+            logging.info("No changes to '{}' translation to push.".format(source_language))
         git_reset()
