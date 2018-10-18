@@ -35,7 +35,7 @@ def get_language_mapping(project):
     for language in languages_json:
         crowdin_code = language["crowdin_code"]
         osx_locale = language["osx_locale"]
-        django_code = mapping_overrides.get(crowdin_code, default=osx_locale)
+        django_code = mapping_overrides.get(crowdin_code, osx_locale)
         languages[crowdin_code] = {
             "osx_locale": osx_locale,
             "django_code": django_code,
