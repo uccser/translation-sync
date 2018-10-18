@@ -7,6 +7,13 @@ MESSSAGE_FILE_TRIVAL_LINES = (
     "#: ",
 )
 
+# Crowdin codes to Django codes
+LANGUAGE_MAPPING_OVERRIDES = {
+    "zh-CN": "zh-hans",
+    "zh-TW": "zh-hant",
+    "en-UD": "xx_LR",
+}
+
 
 def reset_message_file_comments(message_file_path):
     """Unstage any staged PO files that only have comment or date changes.

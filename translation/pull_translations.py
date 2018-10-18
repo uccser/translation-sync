@@ -14,6 +14,7 @@ from .constants import BRANCH_PREFIX, SOURCE_LANGUAGE
 from .utils import (
     reset_message_file_comments,
     get_existing_files_at_head,
+    LANGUAGE_MAPPING_OVERRIDES,
 )
 
 TRANSLATION_ZIP = "crowdin-translations.zip"
@@ -31,11 +32,10 @@ def get_language_mapping(project):
     response = api_call("supported-languages", project, json=True)
     languages_json = response.json()
     languages = dict()
-    mapping_overrides = project.config["translation"]["language-mapping-overrides"]
     for language in languages_json:
         crowdin_code = language["crowdin_code"]
         osx_locale = language["osx_locale"]
-        django_code = mapping_overrides.get(crowdin_code, osx_locale)
+        django_code = LANGUAGE_MAPPING_OVERRIDES.get(crowdin_code, osx_locale)
         languages[crowdin_code] = {
             "osx_locale": osx_locale,
             "django_code": django_code,
