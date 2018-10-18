@@ -93,9 +93,9 @@ def copy_approved_files(project, extract_location, approved_files, language):
             os.makedirs(destination_directory, exist_ok=True)
         try:
             copy(source, destination)
+            logging.info("Copied {}".format(approved_file_destination))
         except FileNotFoundError:
-            logging.error("Could not copy file {}, it probably doesn't exist. Check if Crowdin has outdated files.".format(source))
-        logging.info("Copied {}".format(approved_file_destination))
+            logging.error("Could not copy file {} to {}, it probably doesn't exist. Check if Crowdin has outdated files.".format(source, destination))
 
 
 def pull_translations(project):
