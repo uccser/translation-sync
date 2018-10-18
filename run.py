@@ -21,6 +21,7 @@ import argparse
 import github
 import google.cloud.logging
 from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
+from google.auth.exceptions import DefaultCredentialsError
 from timeit import default_timer as timer
 
 DEFAULT_WORKING_DIRECTORY = os.getcwd()
@@ -47,8 +48,11 @@ for keyword in TASKS:
     TASK_KEYWORDS[keyword] = [keyword, ALL_TASKS_KEYWORD]
 
 logging.getLogger().setLevel(logging.INFO)
-client = google.cloud.logging.Client()
-client.setup_logging(log_level=logging.INFO)
+try:
+    client = google.cloud.logging.Client()
+    client.setup_logging(log_level=logging.INFO)
+except DefaultCredentialsError:
+    logging.info("Only logging locally.")
 
 # From https://stackoverflow.com/a/16993115
 def handle_exception(exc_type, exc_value, exc_traceback):

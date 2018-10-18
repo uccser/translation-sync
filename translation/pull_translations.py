@@ -74,15 +74,17 @@ def get_approved_node_files(node, parent_path=""):
     return approved_files
 
 
-def copy_approved_files(project, extract_location, approved_files, language):
-    source_path = os.sep + SOURCE_LANGUAGE + os.sep
-    destination_path = os.sep + language + os.sep
+def copy_approved_files(project, extract_location, approved_files, source_language, destination_language):
+    approved_path = os.sep + SOURCE_LANGUAGE + os.sep
+    source_path = os.sep + source_language + os.sep
+    destination_path = os.sep + destination_language + os.sep
 
     for approved_file in sorted(list(approved_files)):
-        approved_file_destination = approved_file.replace(source_path, destination_path)
+        approved_file_source = approved_file.replace(approved_path, source_path)
+        approved_file_destination = approved_file.replace(approved_path, destination_path)
         source = os.path.join(
             extract_location,
-            approved_file_destination
+            approved_file_source
         )
         destination = os.path.join(
             project.directory,
@@ -112,9 +114,9 @@ def pull_translations(project):
     for crowdin_language_code in project_languages:
         source_language = locale_mapping[crowdin_language_code]["osx_locale"]
         destination_language = locale_mapping[crowdin_language_code]["django_code"]
-        logging.info("Processing '{}' language...".format(source_language))
+        logging.info("Processing '{}' language...".format(destination_language))
         target_branch = project.config["translation"]["branches"]["translation-target"]
-        pr_branch = BRANCH_PREFIX + source_language
+        pr_branch = BRANCH_PREFIX + destination_language
         checkout_branch(target_branch)
         checkout_branch(pr_branch)
         run_shell(["git", "merge", "origin/" + target_branch, "--quiet", "--no-edit"])
@@ -122,8 +124,7 @@ def pull_translations(project):
         approved_files = get_approved_files(response.json())
 
         existing_files = get_existing_files_at_head()
-
-        copy_approved_files(project, extract_location, approved_files, destination_language)
+        copy_approved_files(project, extract_location, approved_files, source_language, destination_language)
 
         run_shell(["git", "add", "-A"])
         message_files = glob.glob("./**/{}/**/*.po".format(destination_language), recursive=True)
@@ -132,7 +133,7 @@ def pull_translations(project):
                 reset_message_file_comments(message_file_path)
         diff_result = run_shell(["git", "diff", "--cached", "--quiet"], check=False)
         if diff_result.returncode == 1:
-            logging.info("Changes to '{}' language to push.".format(source_language))
+            logging.info("Changes to ({}/{}) language to push.".format(source_language, destination_language))
             run_shell(["git", "commit", "-m", "Update '{}' language translations".format(destination_language)])
             run_shell(["git", "push", "origin", pr_branch])
             existing_pulls = project.repo.get_pulls(state="open", head="uccser:" + pr_branch, base=target_branch)
@@ -153,5 +154,5 @@ def pull_translations(project):
                 pull.add_to_labels("internationalization")
                 logging.info("Pull request created: {} (#{})".format(pull.title, pull.number))
         else:
-            logging.info("No changes to '{}' translation to push.".format(source_language))
+            logging.info("No changes to ({}/{}) translation to push.".format(source_language, destination_language))
         git_reset()
