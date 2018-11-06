@@ -9,8 +9,8 @@ MESSSAGE_FILE_TRIVAL_LINES = (
 
 # Crowdin codes to Django codes
 LANGUAGE_MAPPING_OVERRIDES = {
-    "zh-CN": "zh-hans",
-    "zh-TW": "zh-hant",
+    "zh-CN": "zh_Hans",
+    "zh-TW": "zh_Hant",
     "en-UD": "xx_LR",
 }
 
