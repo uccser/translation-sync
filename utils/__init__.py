@@ -16,7 +16,7 @@ def run_shell(commands, display=True, check=True):
     if not all(isinstance(command, list) for command in commands):
         commands = [commands]
     for command in commands:
-        result = subprocess.run(command, check=check, stdout=subprocess.PIPE)
+        result = subprocess.run(command, check=check, stdout=subprocess.PIPE, shell=True)
         result_message = result.stdout.decode("utf-8")
         if display and result_message:
             logging.info(result_message)
