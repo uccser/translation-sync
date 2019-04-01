@@ -115,7 +115,7 @@ def copy_approved_files(project, extract_location, approved_files, source_langua
             os.makedirs(destination_directory, exist_ok=True)
         copy(source, destination)
         # If YAML file, append YAML header (we don't store these in our repo)
-        YAML_HEADER = "----\n"
+        YAML_HEADER = "---\n"
         if destination.endswith('.yaml'):
             with open(destination, "r+") as f:
                 current_contents = f.read()
