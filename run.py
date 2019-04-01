@@ -82,10 +82,11 @@ class Project:
 
     def clone(self):
         """Clone the repository, deleting any existing installations."""
-        if os.path.isdir(self.directory) and not self.cli_args.skip_clone:
-            logging.info("Existing repository detected! Deleting existing directory...")
-            run_shell(["sudo", "rm", "-r", self.directory])
-        run_shell(["git", "clone", self.repo.ssh_url])
+        if not self.cli_args.skip_clone:
+            if os.path.isdir(self.directory):
+                logging.info("Existing repository detected! Deleting existing directory...")
+                run_shell(["sudo", "rm", "-r", self.directory])
+            run_shell(["git", "clone", self.repo.ssh_url])
 
     def run(self):
         if self.cli_args.task in TASK_KEYWORDS["link-checker"] and self.config.get("broken-link-checker"):
