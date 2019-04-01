@@ -99,6 +99,23 @@ def copy_approved_files(project, extract_location, approved_files, source_langua
         except FileNotFoundError:
             logging.error("Could not copy file {} to {}, it probably doesn't exist. Check if Crowdin has outdated files.".format(source, destination))
 
+    # Check file overrides
+    override_filenames = project.config["translation"].get("file-overrides", list())
+    for override_filename in override_filenames:
+        source = os.path.join(
+            project.directory,
+            override_filename
+        )
+        destination = os.path.join(
+            project.directory,
+            override_filename.replace(approved_path, destination_path)
+        )
+        destination_directory = os.path.dirname(destination)
+        if not os.path.exists(destination_directory):
+            os.makedirs(destination_directory, exist_ok=True)
+        copy(source, destination)
+        logging.info("Copied {} (set by override)".format(approved_file_destination))
+
 
 def pull_translations(project):
     locale_mapping = get_language_mapping(project)

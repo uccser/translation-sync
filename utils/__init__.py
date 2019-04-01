@@ -16,7 +16,7 @@ def run_shell(commands, display=True, check=True):
     if not all(isinstance(command, list) for command in commands):
         commands = [commands]
     for command in commands:
-        result = subprocess.run(command, check=check, stdout=subprocess.PIPE, shell=True)
+        result = subprocess.run(command, check=check, stdout=subprocess.PIPE)
         result_message = result.stdout.decode("utf-8")
         if display and result_message:
             logging.info(result_message)
@@ -45,13 +45,16 @@ def read_secrets(required_secrets):
 
 def checkout_branch(branch):
     try:
+        logging.info("Checking out to existing branch on GitHub")
         result = run_shell(["git", "checkout", branch], display=False)
-        logging.info("Checked out to existing branch on GitHub")
-        logging.info(result.stdout.decode("utf-8"))
+    except subprocess.CalledProcessError:
+        logging.info("Checking out to new branch")
+        result = run_shell(["git", "checkout", "-b", branch])
+    logging.info(result.stdout.decode("utf-8"))
+    try:
         run_shell(["git", "pull"])
     except subprocess.CalledProcessError:
-        run_shell(["git", "checkout", "-b", branch])
-        logging.info("Checked out to new branch")
+        logging.info("Cannot pull (branch {} probably doesn't exist on GitHub), skipping step.".format(branch))
 
 
 def render_text(path, context):
