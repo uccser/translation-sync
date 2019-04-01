@@ -114,6 +114,14 @@ def copy_approved_files(project, extract_location, approved_files, source_langua
         if not os.path.exists(destination_directory):
             os.makedirs(destination_directory, exist_ok=True)
         copy(source, destination)
+        # If YAML file, append YAML header (we don't store these in our repo)
+        YAML_HEADER = "----\n"
+        if destination.endswith('.yaml'):
+            with open(destination, "r+") as f:
+                current_contents = f.read()
+                if not current_contents.startswith(YAML_HEADER):
+                    f.seek(0)
+                    f.write(YAML_HEADER + current_contents)
         logging.info("Copied {} (set by override)".format(approved_file_destination))
 
 
