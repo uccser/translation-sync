@@ -1,5 +1,5 @@
 # General
-PyGithub==1.43.3
+PyGithub==1.43.6
 Jinja2==2.10
 PyYAML==4.2b4
 google-cloud-logging==1.8.0
