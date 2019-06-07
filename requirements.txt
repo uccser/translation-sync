@@ -1,7 +1,7 @@
 # General
 PyGithub==1.43.3
 Jinja2==2.10
-PyYAML==4.2b4
+PyYAML==5.1.1
 google-cloud-logging==1.8.0
 
 # Translations
