@@ -11,4 +11,4 @@ requests==2.22.0
 linkie==1.4.0
 
 # Testing
-flake8==3.7.7
+flake8==3.7.9
