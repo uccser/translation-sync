@@ -16,13 +16,16 @@ def run_shell(commands, display=True, check=True, catch_check_error=True):
     if not all(isinstance(command, list) for command in commands):
         commands = [commands]
     for command in commands:
-        # Refresh shell directories
-        subprocess.run('cd .', shell=True)
         try:
             result = subprocess.run(command, check=check, stdout=subprocess.PIPE)
         except subprocess.CalledProcessError as e:
             if catch_check_error:
-                raise RuntimeError("Command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+                try:
+                    # Refresh shell directories and retry in shell
+                    subprocess.run('cd .', shell=True)
+                    result = subprocess.run(command, shell=True, check=check, stdout=subprocess.PIPE)
+                except:
+                    raise RuntimeError("Command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
             else:
                 raise
         result_message = result.stdout.decode("utf-8")
