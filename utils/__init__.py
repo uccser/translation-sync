@@ -7,7 +7,7 @@ from timeit import default_timer as timer
 from string import ascii_uppercase
 
 
-def run_shell(commands, display=True, check=True):
+def run_shell(commands, display=True, check=True, catch_check_error=True):
     """Run a list of shell commands.
 
     Args:
@@ -19,7 +19,10 @@ def run_shell(commands, display=True, check=True):
         try:
             result = subprocess.run(command, check=check, stdout=subprocess.PIPE)
         except subprocess.CalledProcessError as e:
-            raise RuntimeError("Command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+            if catch_check_error:
+                raise RuntimeError("Command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+            else:
+                raise
         result_message = result.stdout.decode("utf-8")
         if display and result_message:
             logging.info(result_message)
@@ -49,13 +52,13 @@ def read_secrets(required_secrets):
 def checkout_branch(branch):
     try:
         logging.info("Checking out to existing branch on GitHub")
-        result = run_shell(["git", "checkout", branch], display=False)
+        result = run_shell(["git", "checkout", branch], display=False, catch_check_error=False)
     except subprocess.CalledProcessError:
         logging.info("Checking out to new branch")
         result = run_shell(["git", "checkout", "-b", branch])
     logging.info(result.stdout.decode("utf-8"))
     try:
-        run_shell(["git", "pull"])
+        run_shell(["git", "pull"], catch_check_error=False)
     except subprocess.CalledProcessError:
         logging.info("Cannot pull (branch {} probably doesn't exist on GitHub), skipping step.".format(branch))
 
