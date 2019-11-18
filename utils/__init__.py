@@ -16,6 +16,8 @@ def run_shell(commands, display=True, check=True, catch_check_error=True):
     if not all(isinstance(command, list) for command in commands):
         commands = [commands]
     for command in commands:
+        # Refresh shell directories
+        subprocess.run('cd .', shell=True)
         try:
             result = subprocess.run(command, check=check, stdout=subprocess.PIPE)
         except subprocess.CalledProcessError as e:
