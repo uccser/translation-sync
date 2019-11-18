@@ -58,3 +58,4 @@ def update_source_message_file(project):
     else:
         logging.info("No changes to source message files to push.")
     git_reset()
+    run_shell(["docker", "system", "prune", "--volumes", "-a", "-f"])
