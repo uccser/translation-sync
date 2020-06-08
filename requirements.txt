@@ -8,7 +8,7 @@ google-cloud-logging==1.11.0
 requests==2.22.0
 
 # Link Checker
-linkie==1.4.0
+linkie==1.4.1
 
 # Testing
 flake8==3.7.7
