@@ -5,7 +5,7 @@ PyYAML==5.3.1
 google-cloud-logging==1.11.0
 
 # Translations
-requests==2.22.0
+requests==2.25.0
 
 # Link Checker
 linkie==1.4.1
